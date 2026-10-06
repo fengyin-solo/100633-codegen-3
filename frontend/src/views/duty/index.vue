@@ -67,6 +67,27 @@
       <span>共 {{ total }} 条运维值班交接记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
     </footer>
+
+    <!-- 保洁交接清单：与保洁作业单台账读的是同一份存储，结论两处一致 -->
+    <div class="panel">
+      <div class="panel-head">
+        <h3>保洁作业单 · 交接清单（与保洁台账同源）</h3>
+        <button class="btn" type="button" @click="exportCleaningHandover">下载清单文件</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>时间</th><th>类别</th><th>事项</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in cleaningHandover" :key="String(row.id)">
+            <td>{{ row['时间'] }}</td>
+            <td>{{ row['类别'] }}</td>
+            <td>{{ row['事项'] }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="hint">车单导入、待核核定、月底另存、存量回填的结论都在这里，与「保洁作业单台账」页是同一份。</p>
+    </div>
   </section>
 </template>
 
@@ -79,6 +100,7 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { downloadHandover, listHandover } from '@/api/cleaning-service'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('duty')
@@ -128,10 +150,24 @@ function reload() {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    cleaningHandover.value = listHandover()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '运维值班交接列表读取失败'
   }
 }
 
+const cleaningHandover = ref<EntryRow[]>([])
+
+function exportCleaningHandover() {
+  downloadHandover()
+}
+
 onMounted(reload)
 </script>
+
+<style scoped>
+.panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 18px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.panel-head h3 { margin: 0; font-size: 15px; }
+.hint { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+</style>

@@ -19,6 +19,7 @@ const Energy = () => import('@/views/energy/index.vue')
 const Device = () => import('@/views/device/index.vue')
 const Entryapprove = () => import('@/views/entryapprove/index.vue')
 const Duty = () => import('@/views/duty/index.vue')
+const Cleaning = () => import('@/views/cleaning/index.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -42,6 +43,7 @@ const router = createRouter({
     { path: '/device', name: 'device', component: Device },
     { path: '/entryapprove', name: 'entryapprove', component: Entryapprove },
     { path: '/duty', name: 'duty', component: Duty },
+    { path: '/cleaning', name: 'cleaning', component: Cleaning },
   ],
 })
 
