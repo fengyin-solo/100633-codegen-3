@@ -35,3 +35,25 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+
+/* 保洁作业单台账 */
+.hidden-file { display: none; }
+.tab-bar { display: flex; gap: 6px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.tab-item { position: relative; border: none; background: none; padding: 8px 14px; cursor: pointer; font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent; }
+.tab-item.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+.tab-badge { font-style: normal; background: #fef3c7; color: #92400e; border-radius: 999px; padding: 0 7px; font-size: 11px; margin-left: 4px; }
+.result-note { background: #ecfdf3; border: 1px solid #abefc6; color: #067647; border-radius: 6px; padding: 8px 12px; font-size: 13px; margin: 0 0 10px; }
+.result-note.error-text { background: #fef3f2; border-color: #fda29b; color: #b42318; }
+.row-pending { background: #fffaeb; }
+.row-pending td { font-weight: 500; }
+.row-total { background: #eef4ff; font-weight: 600; }
+.freeze-tag { margin-left: 6px; background: #e0f2fe; color: #075985; border-radius: 4px; padding: 0 6px; font-size: 11px; }
+.hold-panel { margin-top: 22px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.hold-head h3 { margin: 0 0 4px; font-size: 15px; }
+.hold-actions { display: flex; gap: 6px; }
+.verdict-cell { max-width: 320px; color: var(--muted); font-size: 12px; }
+.btn.small { padding: 3px 10px; font-size: 12px; }
+.resolve-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; border: 1px dashed var(--border); border-radius: 6px; padding: 10px; }
+.resolve-form textarea { width: 100%; font-family: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; }
+.rule-list { font-size: 13px; color: #334155; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.filter-item select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }

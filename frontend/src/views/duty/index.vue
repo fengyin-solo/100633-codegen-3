@@ -67,6 +67,33 @@
       <span>共 {{ total }} 条运维值班交接记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
     </footer>
+
+    <section class="hold-panel">
+      <header class="hold-head">
+        <h3>其它入口交接清单（保洁作业单台账）</h3>
+        <p class="page-desc">
+          保洁台账的导入批次、废行、待核核定、月底归总与存量回填结论都写在这里，与「保洁作业单台账 - 交接清单 / 口径」取同一份数据；
+          台账与清单在同一次提交里同步更新。
+        </p>
+      </header>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th v-for="column in handoverColumns" :key="column">{{ column }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in handovers" :key="String(row.id)">
+            <td v-for="column in handoverColumns" :key="column" :title="column === '内容' ? String(row[column]) : ''">
+              {{ row[column] ?? '—' }}
+            </td>
+          </tr>
+          <tr v-if="!handovers.length">
+            <td :colspan="handoverColumns.length" class="empty-state">暂无来自保洁台账的交接结论</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
   </section>
 </template>
 
@@ -79,13 +106,21 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { ensureBackfill, listHandover } from '@/api/cleaning-service'
+import type { HandoverRow } from '@/data/cleaning'
 import type { EntryRow } from '@/data/types'
+import { useSessionStore } from '@/stores/session'
+
+const session = useSessionStore()
 
 const meta = moduleMeta('duty')
 const columns = ["交接编号", "值班班组", "值班日期", "班次", "值班人员", "交接事项", "交接人员", "交接状态"]
 const actions = ["发起交接", "确认交接", "登记遗留"]
 const statuses = ["待交接", "交接中", "已交接", "有遗留"]
 const stats = [{"label": "待交接班次", "value": 0}, {"label": "已交接班次", "value": 0}, {"label": "有遗留事项", "value": 0}]
+
+const handoverColumns = ['时间', '类型', '内容', '批次号', '月份', '操作人']
+const handovers = ref<HandoverRow[]>([])
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
@@ -133,5 +168,9 @@ function reload() {
   }
 }
 
-onMounted(reload)
+onMounted(() => {
+  ensureBackfill(session.operator)
+  reload()
+  handovers.value = listHandover()
+})
 </script>

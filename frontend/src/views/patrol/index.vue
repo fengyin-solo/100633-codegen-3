@@ -67,6 +67,52 @@
       <span>共 {{ total }} 条廊内巡检任务记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
     </footer>
+
+    <section class="hold-panel">
+      <header class="hold-head">
+        <h3>保洁对账待核（监管员处理）</h3>
+        <p class="page-desc">
+          保洁作业单导入时，清运量与当天本区域巡检上报的遗留问题数明显不一致、或当天无巡检上报可对的，先挂待核，在这里核定。
+          数据与「保洁作业单台账」是同一份：核定后作业单即入账并冻结，同车次再导入不翻案；结论同步写入值班交接清单。
+        </p>
+      </header>
+
+      <p v-if="holdMessage" class="result-note" :class="{ 'error-text': !holdOk }">{{ holdMessage }}</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th v-for="column in holdColumns" :key="column">{{ column }}</th>
+            <th>对账结论</th>
+            <th>核定</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in holds" :key="String(row.id)">
+            <td v-for="column in holdColumns" :key="column">{{ row[column] ?? '—' }}</td>
+            <td class="verdict-cell">{{ row['对账结论'] }}</td>
+            <td class="hold-actions">
+              <button class="btn small" type="button" @click="openResolve(row)">核定入账</button>
+            </td>
+          </tr>
+          <tr v-if="!holds.length">
+            <td :colspan="holdColumns.length + 2" class="empty-state">暂无保洁对账待核单</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form v-if="resolving" class="resolve-form" @submit.prevent="submitResolve">
+        <strong>核定作业单 {{ resolving['作业单号'] }}（车次 {{ resolving['车次编号'] }}，清运 {{ resolving['清运量(车)'] }} 车）</strong>
+        <label class="filter-item">
+          <span>核定结论（监管员意见）</span>
+          <textarea v-model="resolveText" rows="2" placeholder="如：经核实清运 3 车属实，巡检遗留项为重复上报，按车单入账"></textarea>
+        </label>
+        <div>
+          <button class="btn primary" type="submit">确认核定并冻结</button>
+          <button class="btn ghost" type="button" @click="resolving = null">取消</button>
+        </div>
+      </form>
+    </section>
   </section>
 </template>
 
@@ -79,7 +125,12 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { ensureBackfill, listHolds, resolveHold } from '@/api/cleaning-service'
+import type { CleaningOrder } from '@/data/cleaning'
 import type { EntryRow } from '@/data/types'
+import { useSessionStore } from '@/stores/session'
+
+const session = useSessionStore()
 
 const meta = moduleMeta('patrol')
 const columns = ["巡检编号", "巡检路线", "巡检班组", "计划日期", "完成时间", "发现问题数", "巡检人员", "巡检状态"]
@@ -92,12 +143,48 @@ const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
+
+// 保洁对账待核：取的就是保洁台账里 status=待核 的行，不另存一份。
+const holdColumns = ['作业单号', '车次编号', '清运日期', '保洁区域', '保洁班组', '清运量(车)', '口径版本']
+const holds = ref<CleaningOrder[]>([])
+const resolving = ref<CleaningOrder | null>(null)
+const resolveText = ref('')
+const holdMessage = ref('')
+const holdOk = ref(true)
+
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+
+function reloadHolds() {
+  holds.value = listHolds()
+}
+
+function openResolve(row: CleaningOrder) {
+  resolving.value = row
+  resolveText.value = ''
+  holdMessage.value = ''
+}
+
+function submitResolve() {
+  if (!resolving.value) return
+  const conclusion = resolveText.value.trim()
+  if (!conclusion) {
+    holdMessage.value = '请填写核定结论'
+    holdOk.value = false
+    return
+  }
+  const result = resolveHold(Number(resolving.value.id), session.operator, conclusion)
+  holdMessage.value = result.message
+  holdOk.value = result.ok
+  if (result.ok) {
+    resolving.value = null
+    reloadHolds()
+  }
+}
 
 function resetFilters() {
   filters.value = {}
@@ -120,6 +207,8 @@ function runAction(action: string, row: EntryRow) {
     return
   }
   reload()
+  // 巡检状态变了，对账结论依据的数据也可能变：待核面板跟着刷新（同一台账，不重算已冻结单）。
+  reloadHolds()
 }
 
 function reload() {
@@ -133,5 +222,9 @@ function reload() {
   }
 }
 
-onMounted(reload)
+onMounted(() => {
+  ensureBackfill(session.operator)
+  reload()
+  reloadHolds()
+})
 </script>

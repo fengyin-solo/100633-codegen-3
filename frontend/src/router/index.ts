@@ -10,6 +10,7 @@ const Firecontrol = () => import('@/views/firecontrol/index.vue')
 const Lighting = () => import('@/views/lighting/index.vue')
 const Access = () => import('@/views/access/index.vue')
 const Patrol = () => import('@/views/patrol/index.vue')
+const Cleaning = () => import('@/views/cleaning/index.vue')
 const Settlement = () => import('@/views/settlement/index.vue')
 const Leak = () => import('@/views/leak/index.vue')
 const Maintenance = () => import('@/views/maintenance/index.vue')
@@ -33,6 +34,7 @@ const router = createRouter({
     { path: '/lighting', name: 'lighting', component: Lighting },
     { path: '/access', name: 'access', component: Access },
     { path: '/patrol', name: 'patrol', component: Patrol },
+    { path: '/cleaning', name: 'cleaning', component: Cleaning },
     { path: '/settlement', name: 'settlement', component: Settlement },
     { path: '/leak', name: 'leak', component: Leak },
     { path: '/maintenance', name: 'maintenance', component: Maintenance },
